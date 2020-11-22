@@ -1,0 +1,24 @@
+{include file="/public/header"}
+
+{include file="/public/left"}
+
+<div class="layui-body">
+        <!-- 内容主体区域 -->
+        <div style="padding: 15px;">内容主体区域</div>
+    </div>
+
+{include file="/public/footer"}
+</div>
+<script>
+    //JavaScript代码区域
+    layui.use('element', function(){
+        var element = layui.element;
+        //监听导航点击
+        element.on('nav(demo)', function(elem){
+            console.log(elem,elem[0].text)
+
+        });
+    });
+</script>
+</body>
+</html>

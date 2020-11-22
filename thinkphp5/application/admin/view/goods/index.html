@@ -1,0 +1,155 @@
+{include file="/public/header"}
+
+{include file="/public/left"}
+<link rel="stylesheet" href="__layui__/css/layui.css"  media="all">
+<style>
+    div:not(.layerDemoauto) #form{
+        display: none;
+                        }
+    #form{
+        padding-top: 20px;
+        padding-right: 20px;
+    }
+</style>
+<div class="layui-body">
+    <div id="form">
+        {include file="/form/goods"}
+    </div>
+    <!-- 内容主体区域 -->
+    <div style="padding: 15px;">
+        <button data-method="offset" data-type="auto" class="layui-btn layui-btn-normal">添加商品</button>
+        <table class="layui-table" lay-data="{ height:500, url:'/goodsList', page:true, id:'idTest'}" lay-filter="demo">
+            <thead>
+            <tr>
+                <th lay-data="{type:'checkbox', fixed: 'left'}"></th>
+                <th lay-data="{field:'goods_id', width:80, sort: true, fixed: true}">ID</th>
+                <th lay-data="{field:'goods_name', width:80}">商品名称</th>
+                <th lay-data="{field:'date', width:80, sort: true}">时间戳</th>
+                <th lay-data="{fixed: 'right', width:178, align:'center', toolbar: '#barDemo'}"></th>
+            </tr>
+            </thead>
+        </table>
+
+        <script type="text/html" id="barDemo">
+<!--            <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>-->
+<!--            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>-->
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        </script>
+
+
+        <script src="//res.layui.com/layui/dist/layui.js" charset="utf-8"></script>
+        <!-- 注意：如果你直接复制所有代码到本地，上述js路径需要改成你本地的 -->
+        <script>
+            layui.use('table', function(){
+                var table = layui.table;
+                var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+                var custom = {
+                    offset: function(othis){
+                        console.log(othis);
+                        var type = othis.data('type')
+                            ,text = othis.text()
+                            ,layer = window.layer;
+                            layer.open({
+                                type: 1
+                                ,offset: type //具体配置参考：http://www.layui.com/doc/modules/layer.html#offset
+                                ,id: 'layerDemo'+type //防止重复弹出
+                                ,content: $('#form')
+                                ,btn: '关闭'
+                                ,btnAlign: 'r' //按钮居有
+                                ,shade: 0 //不显示遮罩
+                                ,area: ['500px','50%']
+                                ,scrollbar: false
+                                ,yes: function(){
+                                    layer.closeAll();
+                                }
+                            });
+                    }
+                }
+
+
+                //监听表格复选框选择
+                table.on('checkbox(demo)', function(obj){
+                    console.log(obj)
+                });
+                //监听工具条
+                table.on('tool(demo)', function(obj){
+                    var data = obj.data;
+                    if(obj.event === 'detail'){
+                        layer.msg('ID：'+ data.id + ' 的查看操作');
+                    } else if(obj.event === 'del'){
+                        layer.confirm('真的删除行么', function(index){
+                            $.ajax({
+                                type:'get',
+                                url:'/goodsDel',
+                                data:{goods_id:data.goods_id},
+                                dataType:'json'
+                            });
+                            obj.del();
+
+                            layer.close(index);
+                        });
+                    } else if(obj.event === 'edit'){
+                        layer.alert('编辑行：<br>'+ JSON.stringify(data))
+                    }
+                });
+
+                var $ = layui.$, active = {
+                    getCheckData: function(){ //获取选中数据
+                        var checkStatus = table.checkStatus('idTest')
+                            ,data = checkStatus.data;
+                        layer.alert(JSON.stringify(data));
+                    }
+                    ,getCheckLength: function(){ //获取选中数目
+                        var checkStatus = table.checkStatus('idTest')
+                            ,data = checkStatus.data;
+                        layer.msg('选中了：'+ data.length + ' 个');
+                    }
+                    ,isAll: function(){ //验证是否全选
+                        var checkStatus = table.checkStatus('idTest');
+                        layer.msg(checkStatus.isAll ? '全选': '未全选')
+                    }
+                };
+
+                $('.demoTable .layui-btn').on('click', function(){
+                    var type = $(this).data('type');
+                    active[type] ? active[type].call(this) : '';
+                });
+
+                $('.layui-btn').on('click', function(){
+                    var othis = $(this), method = othis.data('method');
+                    custom[method] ? custom[method].call(this, othis) : '';
+                });
+
+
+                //表单提交截断方法
+                window.submitGoods = function (id){
+                    var fromdata = new FormData( document.getElementById(id) )
+                        ,layer = window.layer;
+
+                    $.ajax({
+                        type:'post',
+                        url:'/goodsAdd',
+                        data:fromdata,
+                        cache:false,
+                        contentType:false,
+                        processData:false,
+                        success(response){
+                            layer.msg(response.msg?response.msg:response.error_msg);
+                        }
+                    });
+
+                    return false;
+                }
+
+            });
+        </script>
+
+    </div>
+</div>
+
+{include file="/public/footer"}
+
+</div>
+
+</body>
+</html>
